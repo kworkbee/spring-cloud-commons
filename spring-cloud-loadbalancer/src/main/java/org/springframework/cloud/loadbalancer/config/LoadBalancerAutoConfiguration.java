@@ -18,9 +18,13 @@ package org.springframework.cloud.loadbalancer.config;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+
+import io.netty.util.internal.StringUtil;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -31,6 +35,8 @@ import org.springframework.cloud.client.loadbalancer.reactive.ReactorLoadBalance
 import org.springframework.cloud.loadbalancer.annotation.LoadBalancerClientSpecification;
 import org.springframework.cloud.loadbalancer.annotation.LoadBalancerClients;
 import org.springframework.cloud.loadbalancer.aot.LoadBalancerChildContextInitializer;
+import org.springframework.cloud.loadbalancer.cache.LoadBalancerCacheManager;
+import org.springframework.cloud.loadbalancer.cache.ZoneFailoverAwareCacheDataManager;
 import org.springframework.cloud.loadbalancer.support.LoadBalancerClientFactory;
 import org.springframework.cloud.loadbalancer.support.LoadBalancerEagerContextInitializer;
 import org.springframework.context.ApplicationContext;
@@ -50,10 +56,13 @@ import org.springframework.core.env.Environment;
 @ConditionalOnProperty(value = "spring.cloud.loadbalancer.enabled", havingValue = "true", matchIfMissing = true)
 public class LoadBalancerAutoConfiguration {
 
+	private static final String ZONE_SPLITTER_COMMA = ",";
+
 	@Bean
 	@ConditionalOnMissingBean
 	public LoadBalancerZoneConfig zoneConfig(Environment environment) {
-		return new LoadBalancerZoneConfig(environment.getProperty("spring.cloud.loadbalancer.zone"));
+		return new LoadBalancerZoneConfig(environment.getProperty("spring.cloud.loadbalancer.zone"), List.of(Optional.ofNullable(environment.getProperty("spring.cloud.loadbalancer.secondary-zones"))
+				.orElse(StringUtil.EMPTY_STRING).split(ZONE_SPLITTER_COMMA)));
 	}
 
 	@ConditionalOnMissingBean

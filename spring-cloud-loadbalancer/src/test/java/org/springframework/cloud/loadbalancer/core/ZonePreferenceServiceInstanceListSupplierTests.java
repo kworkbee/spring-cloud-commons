@@ -24,6 +24,7 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
+import reactor.test.StepVerifier;
 
 import org.springframework.cloud.client.DefaultServiceInstance;
 import org.springframework.cloud.client.ServiceInstance;
@@ -96,10 +97,12 @@ class ZonePreferenceServiceInstanceListSupplierTests {
 		zoneConfig.setZone(null);
 		when(delegate.get()).thenReturn(Flux.just(Arrays.asList(first, second, third, fourth)));
 
-		List<ServiceInstance> filtered = supplier.get().blockFirst();
-
-		assertThat(filtered).hasSize(4);
-		assertThat(filtered).contains(first, second, third, fourth);
+		supplier.get()
+				.as(StepVerifier::create)
+				.assertNext(filtered -> {
+					assertThat(filtered).hasSize(4);
+					assertThat(filtered).contains(first, second, third, fourth);
+				});
 	}
 
 	private DefaultServiceInstance serviceInstance(String instanceId, Map<String, String> metadata) {

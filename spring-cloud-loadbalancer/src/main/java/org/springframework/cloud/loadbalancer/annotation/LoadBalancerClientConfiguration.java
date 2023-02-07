@@ -99,6 +99,16 @@ public class LoadBalancerClientConfiguration {
 		}
 
 		@Bean
+		@ConditionalOnBean(ReactiveDiscoveryClient.class)
+		@ConditionalOnMissingBean
+		@Conditional(ZoneFailoverAwarenessConfigurationCondition.class)
+		public ServiceInstanceListSupplier zoneFailoverAwarenessServiceInstanceListSupplier(
+				ConfigurableApplicationContext context) {
+			return ServiceInstanceListSupplier.builder().withDiscoveryClient().withZoneFailoverAwareness().withCaching()
+					.build(context);
+		}
+
+		@Bean
 		@ConditionalOnBean(LoadBalancerClientFactory.class)
 		@ConditionalOnMissingBean
 		public XForwardedHeadersTransformer xForwarderHeadersTransformer(LoadBalancerClientFactory clientFactory) {
@@ -106,7 +116,7 @@ public class LoadBalancerClientConfiguration {
 		}
 
 		@Bean
-		@ConditionalOnBean({ ReactiveDiscoveryClient.class, WebClient.Builder.class })
+		@ConditionalOnBean({ReactiveDiscoveryClient.class, WebClient.Builder.class})
 		@ConditionalOnMissingBean
 		@Conditional(HealthCheckConfigurationCondition.class)
 		public ServiceInstanceListSupplier healthCheckDiscoveryClientServiceInstanceListSupplier(
@@ -169,7 +179,17 @@ public class LoadBalancerClientConfiguration {
 		}
 
 		@Bean
-		@ConditionalOnBean({ DiscoveryClient.class, RestTemplate.class })
+		@ConditionalOnBean(DiscoveryClient.class)
+		@ConditionalOnMissingBean
+		@Conditional(ZoneFailoverAwarenessConfigurationCondition.class)
+		public ServiceInstanceListSupplier zoneFailoverAwarenessServiceInstanceListSupplier(
+				ConfigurableApplicationContext context) {
+			return ServiceInstanceListSupplier.builder().withBlockingDiscoveryClient().withZoneFailoverAwareness()
+					.withCaching().build(context);
+		}
+
+		@Bean
+		@ConditionalOnBean({DiscoveryClient.class, RestTemplate.class})
 		@ConditionalOnMissingBean
 		@Conditional(HealthCheckConfigurationCondition.class)
 		public ServiceInstanceListSupplier healthCheckDiscoveryClientServiceInstanceListSupplier(
@@ -309,6 +329,15 @@ public class LoadBalancerClientConfiguration {
 					"configurations", "zone-preference");
 		}
 
+	}
+
+	static class ZoneFailoverAwarenessConfigurationCondition implements Condition {
+
+		@Override
+		public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+			return LoadBalancerEnvironmentPropertyUtils.equalToForClientOrDefault(context.getEnvironment(),
+					"configurations", "zone-failover-awareness");
+		}
 	}
 
 	static class HealthCheckConfigurationCondition implements Condition {

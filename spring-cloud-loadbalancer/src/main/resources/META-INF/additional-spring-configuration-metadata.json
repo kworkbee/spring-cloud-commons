@@ -6,6 +6,11 @@
 			"description": "Spring Cloud LoadBalancer zone."
 		},
 		{
+			"name": "spring.cloud.loadbalancer.secondary-zones",
+			"type": "java.lang.String",
+			"description": "Spring Cloud LoadBalancer Secondary Zones."
+		},
+		{
 			"name": "spring.cloud.loadbalancer.service-discovery.timeout",
 			"description": "String representation of Duration of the timeout for calls to service discovery.",
 			"type": "java.lang.String"

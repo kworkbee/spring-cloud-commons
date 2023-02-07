@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.loadbalancer.config;
 
+import java.util.Collections;
+import java.util.List;
+
 /**
  * @author Olga Maciaszek-Sharma
  */
@@ -26,9 +29,16 @@ public class LoadBalancerZoneConfig {
 	 * instances by zoned load-balancing implementations.
 	 */
 	private String zone;
+	private List<String> secondaryZones;
 
 	public LoadBalancerZoneConfig(String zone) {
 		this.zone = zone;
+		this.secondaryZones = Collections.EMPTY_LIST;
+	}
+
+	public LoadBalancerZoneConfig(String zone, List<String> secondaryZones) {
+		this.zone = zone;
+		this.secondaryZones = secondaryZones;
 	}
 
 	public String getZone() {
@@ -39,4 +49,11 @@ public class LoadBalancerZoneConfig {
 		this.zone = zone;
 	}
 
+	public List<String> getSecondaryZones() {
+		return secondaryZones;
+	}
+
+	public void setSecondaryZones(List<String> secondaryZones) {
+		this.secondaryZones = secondaryZones;
+	}
 }

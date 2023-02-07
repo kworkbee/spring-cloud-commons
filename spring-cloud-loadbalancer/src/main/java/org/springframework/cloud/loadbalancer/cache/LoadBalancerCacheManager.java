@@ -16,7 +16,10 @@
 
 package org.springframework.cloud.loadbalancer.cache;
 
+import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+
+import static org.springframework.cloud.loadbalancer.core.CachingServiceInstanceListSupplier.SERVICE_INSTANCE_CACHE_NAME;
 
 /**
  * A marker interface for Spring Cloud LoadBalancer-specific {@link CacheManager} beans.
@@ -26,4 +29,8 @@ import org.springframework.cache.CacheManager;
  */
 public interface LoadBalancerCacheManager extends CacheManager {
 
+	// TODO Configurable Cache Name (in the future)
+	default Cache getCache() {
+		return getCache(SERVICE_INSTANCE_CACHE_NAME);
+	}
 }
