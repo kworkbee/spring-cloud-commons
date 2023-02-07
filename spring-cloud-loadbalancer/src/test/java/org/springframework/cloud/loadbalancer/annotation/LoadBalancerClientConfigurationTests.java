@@ -26,6 +26,7 @@ import org.springframework.cloud.client.discovery.composite.reactive.ReactiveCom
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.loadbalancer.config.LoadBalancerAutoConfiguration;
 import org.springframework.cloud.loadbalancer.config.LoadBalancerCacheAutoConfiguration;
+import org.springframework.cloud.loadbalancer.config.ZoneFailoverAwarenessConfiguration;
 import org.springframework.cloud.loadbalancer.core.CachingServiceInstanceListSupplier;
 import org.springframework.cloud.loadbalancer.core.DelegatingServiceInstanceListSupplier;
 import org.springframework.cloud.loadbalancer.core.DiscoveryClientServiceInstanceListSupplier;
@@ -34,6 +35,7 @@ import org.springframework.cloud.loadbalancer.core.RequestBasedStickySessionServ
 import org.springframework.cloud.loadbalancer.core.RetryAwareServiceInstanceListSupplier;
 import org.springframework.cloud.loadbalancer.core.ServiceInstanceListSupplier;
 import org.springframework.cloud.loadbalancer.core.WeightedServiceInstanceListSupplier;
+import org.springframework.cloud.loadbalancer.core.ZoneFailoverAwareServiceInstanceListSupplier;
 import org.springframework.cloud.loadbalancer.core.ZonePreferenceServiceInstanceListSupplier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -53,8 +55,8 @@ class LoadBalancerClientConfigurationTests {
 
 	ApplicationContextRunner reactiveDiscoveryClientRunner = new ApplicationContextRunner()
 			.withConfiguration(AutoConfigurations.of(ReactiveCompositeDiscoveryClientAutoConfiguration.class,
-					LoadBalancerCacheAutoConfiguration.class, LoadBalancerAutoConfiguration.class,
-					LoadBalancerClientConfiguration.class));
+					LoadBalancerCacheAutoConfiguration.class, ZoneFailoverAwarenessConfiguration.class,
+					LoadBalancerAutoConfiguration.class, LoadBalancerClientConfiguration.class));
 
 	ApplicationContextRunner blockingDiscoveryClientRunner = new ApplicationContextRunner()
 			.withClassLoader(new FilteredClassLoader(RetryTemplate.class))
@@ -97,6 +99,21 @@ class LoadBalancerClientConfigurationTests {
 					ServiceInstanceListSupplier delegate = ((DelegatingServiceInstanceListSupplier) supplier)
 							.getDelegate();
 					then(delegate).isInstanceOf(ZonePreferenceServiceInstanceListSupplier.class);
+					ServiceInstanceListSupplier secondDelegate = ((DelegatingServiceInstanceListSupplier) delegate)
+							.getDelegate();
+					then(secondDelegate).isInstanceOf(DiscoveryClientServiceInstanceListSupplier.class);
+				});
+	}
+
+	@Test
+	void shouldInstantiateZoneFailoverAwarenessServiceInstanceListSupplier() {
+		reactiveDiscoveryClientRunner.withPropertyValues("spring.cloud.loadbalancer.zone=zone1", "spring.cloud.loadbalancer.secondary-zones=zone2,zone3", "spring.cloud.loadbalancer.configurations=zone-failover-awareness")
+				.run(context -> {
+					ServiceInstanceListSupplier supplier = context.getBean(ServiceInstanceListSupplier.class);
+					then(supplier).isInstanceOf(CachingServiceInstanceListSupplier.class);
+					ServiceInstanceListSupplier delegate = ((DelegatingServiceInstanceListSupplier) supplier)
+							.getDelegate();
+					then(delegate).isInstanceOf(ZoneFailoverAwareServiceInstanceListSupplier.class);
 					ServiceInstanceListSupplier secondDelegate = ((DelegatingServiceInstanceListSupplier) delegate)
 							.getDelegate();
 					then(secondDelegate).isInstanceOf(DiscoveryClientServiceInstanceListSupplier.class);

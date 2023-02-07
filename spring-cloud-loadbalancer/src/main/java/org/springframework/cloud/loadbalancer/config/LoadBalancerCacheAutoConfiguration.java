@@ -23,8 +23,10 @@ import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.AnyNestedCondition;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
@@ -37,6 +39,7 @@ import org.springframework.cloud.loadbalancer.cache.CaffeineBasedLoadBalancerCac
 import org.springframework.cloud.loadbalancer.cache.DefaultLoadBalancerCacheManager;
 import org.springframework.cloud.loadbalancer.cache.LoadBalancerCacheManager;
 import org.springframework.cloud.loadbalancer.cache.LoadBalancerCacheProperties;
+import org.springframework.cloud.loadbalancer.cache.ZoneFailoverAwareCacheDataManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
@@ -56,6 +59,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnClass({ CacheManager.class, CacheAutoConfiguration.class })
 @AutoConfigureAfter(CacheAutoConfiguration.class)
+@AutoConfigureBefore(LoadBalancerLifecycleAutoConfiguration.class)
 @ConditionalOnProperty(value = "spring.cloud.loadbalancer.cache.enabled", matchIfMissing = true)
 @EnableConfigurationProperties(LoadBalancerCacheProperties.class)
 public class LoadBalancerCacheAutoConfiguration {
@@ -70,7 +74,6 @@ public class LoadBalancerCacheAutoConfiguration {
 		}
 
 	}
-
 	static class LoadBalancerCaffeineWarnLogger implements InitializingBean {
 
 		private static final Log LOG = LogFactory.getLog(LoadBalancerCaffeineWarnLogger.class);
@@ -97,7 +100,6 @@ public class LoadBalancerCacheAutoConfiguration {
 		}
 
 	}
-
 	@Configuration(proxyBeanMethods = false)
 	@Conditional(OnCaffeineCacheMissingCondition.class)
 	@ConditionalOnClass(ConcurrentMapWithTimedEviction.class)

@@ -32,6 +32,7 @@ import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.client.discovery.ReactiveDiscoveryClient;
 import org.springframework.cloud.client.loadbalancer.reactive.ReactiveLoadBalancer;
 import org.springframework.cloud.loadbalancer.cache.LoadBalancerCacheManager;
+import org.springframework.cloud.loadbalancer.cache.ZoneFailoverAwareCacheDataManager;
 import org.springframework.cloud.loadbalancer.config.LoadBalancerZoneConfig;
 import org.springframework.cloud.loadbalancer.support.LoadBalancerClientFactory;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -277,6 +278,16 @@ public final class ServiceInstanceListSupplierBuilder {
 			}
 			return delegate;
 		};
+		return this;
+	}
+
+	public ServiceInstanceListSupplierBuilder withZoneFailoverAwareness() {
+		DelegateCreator creator = (context, delegate) -> {
+			ZoneFailoverAwareCacheDataManager cacheDataManager = context.getBean(ZoneFailoverAwareCacheDataManager.class);
+			LoadBalancerZoneConfig zoneConfig = context.getBean(LoadBalancerZoneConfig.class);
+			return new ZoneFailoverAwareServiceInstanceListSupplier(delegate, cacheDataManager, zoneConfig);
+		};
+		creators.add(creator);
 		return this;
 	}
 
