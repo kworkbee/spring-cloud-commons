@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.loadbalancer.annotation;
 
-import reactor.util.retry.RetrySpec;
-
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.AllNestedConditions;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -50,6 +48,7 @@ import org.springframework.core.type.AnnotatedTypeMetadata;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.util.retry.RetrySpec;
 
 /**
  * @author Spencer Gibb
