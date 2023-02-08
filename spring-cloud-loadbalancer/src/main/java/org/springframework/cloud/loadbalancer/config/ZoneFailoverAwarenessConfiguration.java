@@ -10,7 +10,7 @@ import org.springframework.cloud.loadbalancer.cache.ZoneFailoverAwareCacheDataMa
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-@Configuration(proxyBeanMethods = false)
+@Configuration
 @AutoConfigureAfter({LoadBalancerCacheAutoConfiguration.class, LoadBalancerLifecycleAutoConfiguration.class})
 @AutoConfigureBefore(LoadBalancerClientConfiguration.class)
 public class ZoneFailoverAwarenessConfiguration {
