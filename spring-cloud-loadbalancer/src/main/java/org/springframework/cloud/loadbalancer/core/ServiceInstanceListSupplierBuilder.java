@@ -31,6 +31,7 @@ import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.client.discovery.ReactiveDiscoveryClient;
 import org.springframework.cloud.client.loadbalancer.reactive.ReactiveLoadBalancer;
+import org.springframework.cloud.loadbalancer.cache.LoadBalancerCacheDataManager;
 import org.springframework.cloud.loadbalancer.cache.LoadBalancerCacheManager;
 import org.springframework.cloud.loadbalancer.config.LoadBalancerZoneConfig;
 import org.springframework.cloud.loadbalancer.support.LoadBalancerClientFactory;
@@ -234,6 +235,28 @@ public final class ServiceInstanceListSupplierBuilder {
 		DelegateCreator creator = (context, delegate) -> {
 			LoadBalancerZoneConfig zoneConfig = new LoadBalancerZoneConfig(zoneName);
 			return new ZonePreferenceServiceInstanceListSupplier(delegate, zoneConfig);
+		};
+		this.creators.add(creator);
+		return this;
+	}
+
+	/**
+	 *
+	 */
+	public ServiceInstanceListSupplierBuilder withZoneFailoverAwareness() {
+		DelegateCreator creator = (context, delegate) -> {
+			ObjectProvider<LoadBalancerCacheDataManager> cacheDataManagerProvider = context
+					.getBeanProvider(LoadBalancerCacheDataManager.class);
+			if (cacheDataManagerProvider.getIfAvailable() != null) {
+				LoadBalancerZoneConfig zoneConfig = context.getBean(LoadBalancerZoneConfig.class);
+				return new ZoneFailoverAwarenessServiceInstanceListSupplier(delegate,
+						cacheDataManagerProvider.getIfAvailable(), zoneConfig);
+			}
+			if (LOG.isWarnEnabled()) {
+				LOG.warn(
+						"Cannot load LoadBalancerCacheDataManager Bean. Disables Zone Failover Awareness Configuration.");
+			}
+			return delegate;
 		};
 		this.creators.add(creator);
 		return this;

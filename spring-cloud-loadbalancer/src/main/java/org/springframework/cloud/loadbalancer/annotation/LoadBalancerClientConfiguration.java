@@ -58,6 +58,7 @@ import org.springframework.web.reactive.function.client.WebClient;
  * @author BaoLin Zhu
  * @author changjin wei(魏昌进)
  * @author Zhuozhi Ji
+ * @author Jiwon Jeon
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnDiscoveryEnabled
@@ -95,6 +96,16 @@ public class LoadBalancerClientConfiguration {
 		public ServiceInstanceListSupplier zonePreferenceDiscoveryClientServiceInstanceListSupplier(
 				ConfigurableApplicationContext context) {
 			return ServiceInstanceListSupplier.builder().withDiscoveryClient().withZonePreference().withCaching()
+					.build(context);
+		}
+
+		@Bean
+		@ConditionalOnBean(ReactiveDiscoveryClient.class)
+		@ConditionalOnMissingBean
+		@Conditional(ZoneFailoverAwarenessConfigurationCondition.class)
+		public ServiceInstanceListSupplier zoneFailoverAwarenessDiscoveryClientServiceInstanceListSupplier(
+				ConfigurableApplicationContext context) {
+			return ServiceInstanceListSupplier.builder().withDiscoveryClient().withZoneFailoverAwareness().withCaching()
 					.build(context);
 		}
 
@@ -166,6 +177,16 @@ public class LoadBalancerClientConfiguration {
 		public ServiceInstanceListSupplier zonePreferenceDiscoveryClientServiceInstanceListSupplier(
 				ConfigurableApplicationContext context) {
 			return ServiceInstanceListSupplier.builder().withBlockingDiscoveryClient().withZonePreference()
+					.withCaching().build(context);
+		}
+
+		@Bean
+		@ConditionalOnBean(DiscoveryClient.class)
+		@ConditionalOnMissingBean
+		@Conditional(ZoneFailoverAwarenessConfigurationCondition.class)
+		public ServiceInstanceListSupplier zoneFailoverAwarenessDiscoveryClientServiceInstanceListSupplier(
+				ConfigurableApplicationContext context) {
+			return ServiceInstanceListSupplier.builder().withBlockingDiscoveryClient().withZoneFailoverAwareness()
 					.withCaching().build(context);
 		}
 
@@ -309,6 +330,16 @@ public class LoadBalancerClientConfiguration {
 		public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
 			return LoadBalancerEnvironmentPropertyUtils.equalToForClientOrDefault(context.getEnvironment(),
 					"configurations", "zone-preference");
+		}
+
+	}
+
+	static class ZoneFailoverAwarenessConfigurationCondition implements Condition {
+
+		@Override
+		public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+			return LoadBalancerEnvironmentPropertyUtils.equalToForClientOrDefault(context.getEnvironment(),
+					"configurations", "zone-failover-awareness");
 		}
 
 	}
