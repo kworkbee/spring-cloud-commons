@@ -51,7 +51,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.core.type.filter.AssignableTypeFilter;
 import org.springframework.util.ClassUtils;
 
@@ -104,8 +103,7 @@ public class LoadBalancerCacheAutoConfiguration {
 	@ConditionalOnClass({ Caffeine.class, CaffeineCacheManager.class })
 	protected static class CaffeineLoadBalancerCacheManagerConfiguration {
 
-		@Bean
-		@Primary
+		@Bean(autowireCandidate = false)
 		@ConditionalOnMissingBean
 		LoadBalancerCacheManager caffeineLoadBalancerCacheManager(LoadBalancerCacheProperties cacheProperties) {
 			return new CaffeineBasedLoadBalancerCacheManager(cacheProperties);
@@ -118,7 +116,7 @@ public class LoadBalancerCacheAutoConfiguration {
 	@ConditionalOnClass(ConcurrentMapWithTimedEviction.class)
 	protected static class DefaultLoadBalancerCacheManagerConfiguration {
 
-		@Bean
+		@Bean(autowireCandidate = false)
 		@ConditionalOnMissingBean
 		LoadBalancerCacheManager defaultLoadBalancerCacheManager(LoadBalancerCacheProperties cacheProperties) {
 			return new DefaultLoadBalancerCacheManager(cacheProperties);

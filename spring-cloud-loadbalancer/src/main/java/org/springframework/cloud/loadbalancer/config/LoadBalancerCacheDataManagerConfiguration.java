@@ -16,14 +16,23 @@
 
 package org.springframework.cloud.loadbalancer.config;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
+
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
+import org.springframework.boot.autoconfigure.condition.AnyNestedCondition;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.cloud.loadbalancer.cache.LoadBalancerCacheDataManager;
 import org.springframework.cloud.loadbalancer.cache.LoadBalancerCacheManager;
 import org.springframework.cloud.loadbalancer.cache.ZoneFailoverAwarenessLoadBalancerCacheDataManager;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
 
 /**
  *
@@ -34,9 +43,19 @@ import org.springframework.context.annotation.Configuration;
 public class LoadBalancerCacheDataManagerConfiguration {
 
 	@Bean
+	@DependsOn("caffeineLoadBalancerCacheManager")
+	@ConditionalOnClass({ Caffeine.class, CaffeineCacheManager.class })
 	@ConditionalOnProperty(value = "spring.cloud.loadbalancer.configurations", havingValue = "zone-failover-awareness")
-	LoadBalancerCacheDataManager zoneFailoverAwarenessLoadBalancerCacheManager(LoadBalancerCacheManager cacheManager) {
-		return new ZoneFailoverAwarenessLoadBalancerCacheDataManager(cacheManager);
+	LoadBalancerCacheDataManager zoneFailoverAwarenessCaffeineLoadBalancerCacheManager(ApplicationContext context) {
+		return new ZoneFailoverAwarenessLoadBalancerCacheDataManager((LoadBalancerCacheManager) context.getBean("caffeineLoadBalancerCacheManager"));
+	}
+
+	@Bean
+	@DependsOn("defaultLoadBalancerCacheManager")
+	@Conditional(LoadBalancerCacheAutoConfiguration.OnCaffeineCacheMissingCondition.class)
+	@ConditionalOnProperty(value = "spring.cloud.loadbalancer.configurations", havingValue = "zone-failover-awareness")
+	LoadBalancerCacheDataManager zoneFailoverAwarenessDefaultLoadBalancerCacheManager(ApplicationContext context) {
+		return new ZoneFailoverAwarenessLoadBalancerCacheDataManager((LoadBalancerCacheManager) context.getBean("defaultLoadBalancerCacheManager"));
 	}
 
 }
